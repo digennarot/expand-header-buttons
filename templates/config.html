@@ -1,37 +1,42 @@
-<form>
-  <div class="ehb-config-intro">
-    <p>Check the buttons that should appear in the <strong>sidebar</strong>.<br>
-       Unchecked buttons will remain in the three-dot menu.</p>
-  </div>
+<section class="ehb-config-body">
+  <p class="hint ehb-config-intro">
+    Checked buttons appear in the <strong>sidebar</strong>.
+    Unchecked buttons stay where they were: in the three-dot menu, or in the title bar on V1 sheets.
+  </p>
 
-  <hr>
+  {{#if controls.length}}
+    <div class="ehb-config-toolbar">
+      <button type="button" data-action="toggleAll" data-state="on">
+        <i class="fa-solid fa-square-check" inert></i> All
+      </button>
+      <button type="button" data-action="toggleAll" data-state="off">
+        <i class="fa-regular fa-square" inert></i> None
+      </button>
+    </div>
 
-  {{#if buttons.length}}
-    <div class="ehb-config-list">
-      {{#each buttons}}
-        <div class="ehb-config-item">
+    <ul class="ehb-config-list">
+      {{#each controls}}
+        <li class="ehb-config-item{{#if missing}} ehb-missing{{/if}}">
           <label>
-            <input type="checkbox" name="btn-{{this.safeKey}}" {{#if this.enabled}}checked{{/if}}>
-            {{#if this.iconClass}}
-              <i class="{{this.iconClass}}"></i>
-            {{/if}}
-            <span class="ehb-btn-label">{{this.label}}</span>
-            {{#if this.action}}
-              <code class="ehb-action-id">{{this.action}}</code>
+            <input type="checkbox" name="{{field}}" {{checked enabled}}>
+            <span class="ehb-icon" aria-hidden="true">
+              {{#if iconClass}}<i class="{{iconClass}}" inert></i>{{/if}}
+            </span>
+            <span class="ehb-btn-label" data-tooltip-text="{{label}}">{{label}}</span>
+            {{#if missing}}
+              <span class="ehb-tag" data-tooltip-text="Saved setting. No open sheet shows this button right now.">not open</span>
+            {{else if action}}
+              <code class="ehb-action-id">{{action}}</code>
             {{/if}}
           </label>
-        </div>
+        </li>
       {{/each}}
-    </div>
+    </ul>
   {{else}}
     <p class="ehb-config-empty">
-      <i class="fas fa-exclamation-triangle"></i>
+      <i class="fa-solid fa-triangle-exclamation" inert></i>
       No buttons found!<br>
-      Open a character sheet first, then open this configuration again.
+      Open a sheet first, then open this configuration again.
     </p>
   {{/if}}
-
-  <footer class="sheet-footer">
-    <button type="submit"><i class="fas fa-save"></i> Save</button>
-  </footer>
-</form>
+</section>

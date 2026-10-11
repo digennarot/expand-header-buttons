@@ -1,159 +1,277 @@
 /* =============================================
-   Expand Header Buttons v6.1
+   Expand Header Buttons v2.0
    ============================================= */
+
+/* ---------------------------------------------
+   Theme tokens
+   Dark is the default. The interface theme (body) switches to light
+   unless the application itself is set to dark; a per-application
+   theme-light class switches to light on its own.
+   --------------------------------------------- */
+
+.ehb-sidebar {
+  --ehb-bg: var(--color-cool-5, rgba(30, 30, 35, 0.92));
+  --ehb-border: var(--color-cool-4, rgba(60, 60, 70, 0.6));
+  --ehb-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --ehb-fg: var(--color-text-light-secondary, #b0b0b0);
+  --ehb-fg-hover: var(--color-text-light-primary, #fff);
+  --ehb-bg-hover: var(--color-cool-4, rgba(80, 80, 90, 0.5));
+  --ehb-border-hover: var(--color-cool-3, rgba(100, 100, 110, 0.4));
+  --ehb-bg-active: var(--color-cool-3, rgba(100, 100, 110, 0.6));
+  --ehb-focus: var(--color-border-highlight, #ff6400);
+}
+
+body.theme-light .application:not(.theme-dark) > .ehb-sidebar,
+body.theme-light .app:not(.theme-dark) > .ehb-sidebar,
+.application.theme-light > .ehb-sidebar,
+.app.theme-light > .ehb-sidebar {
+  --ehb-bg: var(--color-warm-5, rgba(245, 240, 230, 0.95));
+  --ehb-border: var(--color-warm-4, rgba(200, 190, 175, 0.6));
+  --ehb-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --ehb-fg: var(--color-text-dark-secondary, #555);
+  --ehb-fg-hover: var(--color-text-dark-primary, #222);
+  --ehb-bg-hover: var(--color-warm-4, rgba(200, 190, 175, 0.4));
+  --ehb-border-hover: var(--color-warm-3, rgba(170, 160, 145, 0.5));
+  --ehb-bg-active: var(--color-warm-3, rgba(170, 160, 145, 0.6));
+}
+
+/* ---------------------------------------------
+   Sidebar
+   --------------------------------------------- */
 
 .ehb-sidebar {
   position: absolute;
   top: 0;
   right: 100%;
-  margin-right: 4px;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 3px;
+  max-height: 100%;
+  margin-right: 4px;
   padding: 4px;
-  background: var(--color-cool-5, rgba(30, 30, 35, 0.92));
-  border: 1px solid var(--color-cool-4, rgba(60, 60, 70, 0.6));
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  background: var(--ehb-bg);
+  border: 1px solid var(--ehb-border);
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  z-index: 1;
+  box-shadow: var(--ehb-shadow);
+}
+
+/* Only the first appearance animates; re-renders reuse the sidebar */
+.ehb-sidebar.ehb-enter {
   animation: ehb-slide-in 0.2s ease-out;
 }
 
 @keyframes ehb-slide-in {
   from { opacity: 0; transform: translateX(8px); }
-  to   { opacity: 1; transform: translateX(0); }
 }
 
-.application.minimized .ehb-sidebar,
-.app.minimized .ehb-sidebar {
+/* Core gives ApplicationV2 windows "overflow: hidden". Let the sidebar overhang
+   the frame on the left, but only on the horizontal axis: "clip" keeps the
+   vertical clipping without making the window a scroll container. Left alone
+   while core (un)minimizes the window. V1 windows (.window-app) do not clip,
+   so they need no override. */
+.application:not(.minimized, .minimizing, .maximizing):has(> .ehb-sidebar) {
+  overflow: visible clip !important;
+}
+
+/* Hidden while minimized and during core's minimize/maximize transitions */
+.application:is(.minimized, .minimizing, .maximizing) > .ehb-sidebar,
+.app.minimized > .ehb-sidebar {
   display: none !important;
 }
 
+/* ---------------------------------------------
+   Sidebar buttons
+   --------------------------------------------- */
+
 .ehb-sidebar-btn {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: center;
   width: 30px;
   height: 30px;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  color: var(--ehb-fg);
+  font-size: 14px;
+  line-height: 1;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 5px;
+  box-shadow: none;
   cursor: pointer;
-  color: var(--color-text-light-secondary, #b0b0b0);
-  font-size: 14px;
-  line-height: 1;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
-.ehb-sidebar-btn:hover {
-  background: var(--color-cool-4, rgba(80, 80, 90, 0.5));
-  border-color: var(--color-cool-3, rgba(100, 100, 110, 0.4));
-  color: var(--color-text-light-primary, #fff);
-  transform: scale(1.1);
+.ehb-sidebar-btn:hover:not(:disabled) {
+  color: var(--ehb-fg-hover);
+  background: var(--ehb-bg-hover);
+  border-color: var(--ehb-border-hover);
+  transform: scale(1.08);
 }
 
-.ehb-sidebar-btn:active {
+.ehb-sidebar-btn:active:not(:disabled) {
+  background: var(--ehb-bg-active);
   transform: scale(0.95);
-  background: var(--color-cool-3, rgba(100, 100, 110, 0.6));
 }
 
-.ehb-sidebar-btn i,
-.ehb-sidebar-btn svg {
-  pointer-events: none;
+.ehb-sidebar-btn:focus-visible {
+  outline: 2px solid var(--ehb-focus);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
+/* Disabled buttons keep their tooltip */
+.ehb-sidebar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ehb-sidebar-btn > i,
+.ehb-sidebar-btn > svg {
+  margin: 0;
   font-size: inherit;
+  pointer-events: none;
 }
 
-.ehb-hidden-in-dropdown {
+@media (prefers-reduced-motion: reduce) {
+  .ehb-sidebar.ehb-enter { animation: none; }
+  .ehb-sidebar-btn { transition: none; }
+  .ehb-sidebar-btn:hover:not(:disabled),
+  .ehb-sidebar-btn:active:not(:disabled) { transform: none; }
+}
+
+/* Header buttons moved into the sidebar */
+.ehb-hidden {
   display: none !important;
 }
 
-@media (prefers-color-scheme: light) {
-  .ehb-sidebar {
-    background: var(--color-warm-5, rgba(245, 240, 230, 0.95));
-    border-color: var(--color-warm-4, rgba(200, 190, 175, 0.6));
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-  .ehb-sidebar-btn {
-    color: var(--color-text-dark-secondary, #555);
-  }
-  .ehb-sidebar-btn:hover {
-    background: var(--color-warm-4, rgba(200, 190, 175, 0.4));
-    color: var(--color-text-dark-primary, #222);
-  }
+/* ---------------------------------------------
+   Icon-only V1 header buttons
+   (setting "Icon-only Header Buttons")
+   --------------------------------------------- */
+
+.app.ehb-icon-only > .window-header .header-button {
+  gap: 0;
+  font-size: 0;
 }
 
-.application:has(.ehb-sidebar) {
-  overflow: visible !important;
+.app.ehb-icon-only > .window-header .header-button > i {
+  margin: 0;
+  font-size: var(--font-size-14, 14px);
 }
 
-/* Config Menu */
+/* ---------------------------------------------
+   Config window
+   --------------------------------------------- */
 
-#ehb-config .ehb-config-intro p {
-  margin: 4px 0;
-  font-size: 13px;
+#ehb-config .ehb-config-intro {
+  margin: 0;
+  font-size: var(--font-size-13, 13px);
+}
+
+#ehb-config .ehb-config-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+#ehb-config .ehb-config-toolbar button {
+  flex: none;
+  width: auto;
+  min-height: 0;
+  padding: 2px 8px;
+  font-size: var(--font-size-12, 12px);
+  line-height: 1.6;
 }
 
 #ehb-config .ehb-config-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: 10px 0;
   max-height: 400px;
+  margin: 0;
+  padding: 0;
   overflow-y: auto;
+  list-style: none;
+  scrollbar-width: thin;
 }
 
 #ehb-config .ehb-config-item {
   padding: 6px 8px;
+  background: color-mix(in srgb, currentColor 5%, transparent);
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.05);
-  transition: background 0.1s;
+  transition: background-color 0.1s ease;
 }
 
-#ehb-config .ehb-config-item:hover {
-  background: rgba(0, 0, 0, 0.1);
+#ehb-config .ehb-config-item:hover,
+#ehb-config .ehb-config-item:focus-within {
+  background: color-mix(in srgb, currentColor 10%, transparent);
 }
 
 #ehb-config .ehb-config-item label {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: var(--font-size-13, 13px);
   cursor: pointer;
-  font-size: 13px;
 }
 
 #ehb-config .ehb-config-item input[type="checkbox"] {
-  flex-shrink: 0;
+  flex: none;
+  margin: 0;
 }
 
-#ehb-config .ehb-config-item i {
-  flex-shrink: 0;
+/* Fixed-width icon slot keeps labels aligned, with or without an icon */
+#ehb-config .ehb-icon {
+  flex: none;
   width: 20px;
-  text-align: center;
   font-size: 14px;
+  text-align: center;
   opacity: 0.7;
+}
+
+#ehb-config .ehb-missing .ehb-icon,
+#ehb-config .ehb-missing .ehb-btn-label {
+  opacity: 0.55;
+}
+
+#ehb-config .ehb-tag {
+  flex: none;
+  padding: 0 5px;
+  font-size: 10px;
+  line-height: 1.6;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  opacity: 0.5;
 }
 
 #ehb-config .ehb-btn-label {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #ehb-config .ehb-action-id {
+  flex: none;
+  font-family: var(--font-mono, monospace);
   font-size: 10px;
-  opacity: 0.35;
-  font-family: monospace;
+  opacity: 0.45;
 }
 
 #ehb-config .ehb-config-empty {
-  text-align: center;
   padding: 20px;
-  color: #888;
+  color: var(--color-text-secondary, #888);
   font-style: italic;
   line-height: 1.5;
+  text-align: center;
 }
 
-#ehb-config .sheet-footer {
-  margin-top: 10px;
-  text-align: right;
+@media (prefers-reduced-motion: reduce) {
+  #ehb-config .ehb-config-item { transition: none; }
 }
